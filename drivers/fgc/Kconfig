@@ -1,0 +1,8 @@
+menu "Fuel Gauge Device Driver"
+
+config BATTERY_DEGRADATION_JUDGEMENT
+        tristate "Voltage Supervision"
+        help
+   	  		Battery degradation judgement in voltage supervision.
+
+endmenu

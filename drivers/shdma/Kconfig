@@ -1,0 +1,5 @@
+    config SHDMA_DRIVER
+    tristate "shdma"
+    default m
+    help
+        This enables the shdma

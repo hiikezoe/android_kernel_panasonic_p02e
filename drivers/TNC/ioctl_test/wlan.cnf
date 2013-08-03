@@ -1,0 +1,19 @@
+
+# device name
+REAL_DEV "eth1"
+
+# Nat Traversal enable/disable
+# 1 : enable
+# 0 : disable
+NatTraversal 1
+
+# UDP port for Nat Traversal
+UDP_OWN_PORT 443
+UDP_REMORT_PORT 443
+
+
+END
+
+
+
+

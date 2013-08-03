@@ -1,0 +1,64 @@
+#
+# TNC API lib Makefile
+#
+
+CC=gcc
+CPP=cpp
+AS=as
+LD=ld
+
+AR=/usr/bin/ar
+RANLIB=/usr/bin/ranlib
+
+EXTRA_CFLAGS=$(GLOBAL_CTRL) -g
+EXTRA_DEFINES=-D_LINUX_
+EXTRA_CPPFLAGS=
+EXTRA_ASFLAGS=
+
+CFLAGS = $(EXTRA_CFLAGS) -Wall
+
+CPPFLAGS = $(EXTRA_CPPFLAGS) $(EXTRA_DEFINES)
+
+#ASFLAGS = $(EXTRA_ASFLAGS) -gg -DASM
+
+VPATH=.:../include
+
+#TARGET = libtnc.a Esp_proto.o virtuallan.o
+TARGET = libtnc.a
+
+HDRS = 
+
+SRCS = 
+
+OBJS = 
+
+all : $(TARGET)
+	(cd ./wrapper; make)
+#	(cd ./esp_module; make esp_proto)
+#	(cd ./esp_module; make virtual)
+	(cd ./esp_module; make Esp_proto.o)
+	(cd ./esp_module; make virtuallan.o)
+
+clean :
+	rm -f *~
+	rm -f Makefile.bak
+	(cd ./wrapper; make clean)
+	(cd ./esp_module; make clean)
+
+depend :
+	makedepend $(CPPFLAGS) $(SRCS)	
+
+.PHONY : all
+install : all
+	cp $(TARGET) $(TARGET_DIR)
+
+libtnc.a :
+	(cd ./wrapper; make)
+
+Esp_proto.o :
+	(cd ./esp_module; make esp_proto)
+
+virtuallan.o :
+	(cd ./esp_module; make virtual)
+
+# DO NOT DELETE THIS LINE -- make depend depends on it.

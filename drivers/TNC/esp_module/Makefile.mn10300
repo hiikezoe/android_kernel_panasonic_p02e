@@ -1,0 +1,153 @@
+# makefiles 
+
+# BEGIN 2006/03/28 OUK Izutani ｿｿｿｿｿｿｿｿｿｿｿｿｿｿｿｿｿｿｿ
+CROSS=mn10300-linux-
+CC	:= $(CROSS)gcc
+# END 2006/03/28 OUK Izutani ｿｿｿｿｿｿｿｿｿｿｿｿｿｿｿｿｿｿｿ
+
+CFLAGS += -D__KERNEL__ -DMODULE  -DTNC_TANTAI_TEST
+#CFLAGS += -O2 -Wall 
+CFLAGS += -O1 -Wall 
+
+
+# 2006/02/22 tamano kernel2.6対応
+
+# yでkernel2.6用、それ以外で2.4用
+TNC_KERNEL_2_6_MAKE=yes
+
+#ifdef TNC_KERNEL_2_6_MAKE
+ifeq ($(TNC_KERNEL_2_6_MAKE),yes)
+
+#VERBOSE MODE
+VMODE=1
+
+# 2006.03.23 OUK Izutani add(TNC_TANTAI_TEST to EXTRA_CFLAGS)
+EXTRA_CFLAGS += -DTNC_TANTAI_TEST
+
+# 2006.03.23 OUK Izutani modify(FLAGS -> EXTRA_CFLAGS)
+EXTRA_CFLAGS += -D_EXPORT_SYMTAB
+
+# ここにカーネルのソースへのパスを追加すること 
+VERSION_R = $(shell uname -r)
+VERSION_M = $(shell uname -m)
+#KERNEL_SRC = /usr/src/kernels/$(VERSION_R)-$(VERSION_M)
+# 2006.03.23 OUK Izutani modify(KERNEL_SRC -> /usr/src/linux-2.6.11
+#KERNEL_SRC = /usr/src/kernels/linux-2.6.11
+#KERNEL_SRC = /usr/src/linux-2.6.11
+KERNEL_SRC = $(MAKETOP)/usr/src/linux
+
+# 2006.03.23 OUK Izutani modify(FLAGS -> EXTRA_CFLAGS)
+EXTRA_CFLAGS += -I$(KERNEL_SRC)/include -I$(KERNEL_SRC)/include/asm/mach-default
+
+# 2006.03.23 OUK Izutani comment out
+#CFLAGS += -fno-strict-aliasing #警告とるため
+#CFLAGS += -fno-common #グローバル変数を使用
+
+# 2006.03.23 OUK Izutani modify(FLAGS -> EXTRA_CFLAGS)
+EXTRA_CFLAGS += -DTNC_KERNEL_2_6
+
+# 2006.03.23 OUK Izutani add(kernel2.6 from izutani)
+EXTRA_CFLAGS += -DTNC_KERNEL_2_6
+EXTRA_CFLAGS += -DIP_STB
+
+# 2006.03.23 OUK Izutani modify(FLAGS -> EXTRA_CFLAGS)
+# 2.6ではモジュールはカーネルソースツリー上でコンパイルする必要がある
+# -I$(TNC_PWD)/crypto/sha2/ 追加@100723yoshino
+TNC_PWD := $(shell pwd)
+EXTRA_CFLAGS += -I$(TNC_PWD)/include/ -I$(TNC_PWD)/../include \
+	  -I$(TNC_PWD)/crypto/sha1/ -I$(TNC_PWD)/crypto/sha2/ -I$(TNC_PWD)/crypto/md5/ -I$(TNC_PWD)/crypto/rijndael/ -I$(TNC_PWD)/crypto/des/
+
+# 2006.03.23 OUK Izutani add(export EXTRA_CFLAGS)
+export EXTRA_CFLAGS
+
+# crypto/sha2/sha256.o crypto/sha2/sha512.o 追加@100723yoshino
+objs_E	:= linux_ipsec.o ah.o ah_core.o crypto/des/des_cbc.o esp.o esp_core.o \
+	   esp_rijndael.o ip_p.o ipsec.o key.o mbuf.o crypto/md5/md5c.o \
+	   crypto/rijndael/rijndael.o set_key.o crypto/sha1/sha1.o crypto/sha2/sha256.o crypto/sha2/sha512.o \
+	   nat_traversal.o ioctl_ipsec.o check_timer.o
+
+objs_V	:= VLan_init.o VLan_xmit.o
+
+
+all: Esp_proto.ko virtuallan.ko 
+
+# 2006.03.23 OUK Izutani modify
+#Esp_proto.ko:
+#	make -C $(KERNEL_SRC) M=`pwd` V=1 modules "CFLAGS += $(CFLAGS)"
+#
+#virtuallan.ko:
+#	make -C $(KERNEL_SRC) M=`pwd` V=1 modules "CFLAGS += $(CFLAGS)"
+#
+#clean:
+#	make -C $(KERNEL_SRC) M=`pwd` V=1 clean
+Esp_proto.ko:
+	make -C $(KERNEL_SRC) M=`pwd` V=$(VMODE) modules
+
+virtuallan.ko:
+	make -C $(KERNEL_SRC) M=`pwd` V=$(VMODE) modules
+
+clean:
+	make -C $(KERNEL_SRC) M=`pwd` V=$(VMODE) clean
+
+obj-m := Esp_proto.o virtuallan.o
+Esp_proto-objs := $(objs_E)
+virtuallan-objs := $(objs_V)
+
+clean-files := *.o *.ko *.mod.[co] *~
+
+
+else
+
+# -I./crypto/sha2/ 追加@100723yoshino
+CFLAGS += -Iinclude/ -I../include -I./crypto/sha1/ -I./crypto/sha2/ -I./crypto/md5/ -I./crypto/rijndael/ -I./crypto/des/
+
+# ここにカーネルのソースへのパスを追加すること 
+VERSION =`uname -r`
+CFLAGS += -I/usr/src/linux-$(VERSION)/include/
+#CFLAGS += -I/usr/src/linux/include/
+
+LDFLAGS	:= 
+
+# crypto/sha2/sha256.o crypto/sha2/sha512.o 追加@100723yoshino
+objs_E	:= linux_ipsec.o ah.o ah_core.o crypto/des/des_cbc.o esp.o esp_core.o \
+	   esp_rijndael.o ip_p.o ipsec.o key.o mbuf.o crypto/md5/md5c.o \
+	   crypto/rijndael/rijndael.o set_key.o crypto/sha1/sha1.o crypto/sha2/sha256.o crypto/sha2/sha512.o \
+	   nat_traversal.o ioctl_ipsec.o check_timer.o
+
+objs_V	:= VLan_init.o VLan_xmit.o
+
+module_E := Esp_proto.o
+module_V := virtuallan.o
+
+
+all: clean $(module_E) $(module_V)
+
+$(module_E): $(objs_E)
+	$(LD) -r $(LDFLAGS) $^ -o $@
+
+
+$(module_V): $(objs_V)
+	$(LD) -r $(LDFLAGS) $^ -o $@
+
+
+# crypto/sha2/*.o 追加@100723yoshino
+clean: 
+	rm -f *.o *~ ../include/*~ core crypto/des/*.o crypto/md5/*.o crypto/sha1/*.o crypto/sha2/*.o crypto/rijndael/*.o
+
+x: $(module_E) $(module_V)
+
+# crypto/sha2/sha256.c crypto/sha2/sha512.c 追加@100723yoshino
+SRCS	= linux_ipsec.c ah.c ah_core.c crypto/des/des_cbc.c esp.c esp_core.c \
+	   esp_rijndael.c ip_p.c ipsec.c key.c mbuf.c crypto/md5/md5c.c \
+	   crypto/rijndael/rijndael.c set_key.c crypto/sha1/sha1.c crypto/sha2/sha256.c crypto/sha2/sha512.c \
+	   nat_traversal.c ioctl_ipsec.c check_timer.c \
+	   VLan_init.c VLan_xmit.c
+printdep:
+	@../../makeinc $(CFLAGS) $(SRCS)
+
+endif
+
+objs_V	:= VLan_init.o VLan_xmit.o
+
+#kernel2.6対応ここまで
+

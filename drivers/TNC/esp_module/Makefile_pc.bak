@@ -1,0 +1,58 @@
+# makefiles 
+
+CC	:= gcc 
+
+# -I./crypto/sha2/ 追加@100723yoshino
+CFLAGS += -D__KERNEL__ -DMODULE  -DTNC_TANTAI_TEST
+CFLAGS += -O2 -Wall
+CFLAGS += -Iinclude/ -I../include -I./crypto/sha1/ -I./crypto/sha2/ -I./crypto/md5/ -I./crypto/rijndael/ -I./crypto/des/
+
+# ここにカーネルのソースへのパスを追加すること
+VERSION =`uname -r`
+CFLAGS += -I/usr/src/linux-2.4/include/
+#CFLAGS += -I/usr/src/linux/include/
+
+LDFLAGS	:= 
+
+# crypto/sha2/sha256.o crypto/sha2/sha512.o 追加@100723yoshino
+objs_E	:= linux_ipsec.o ah.o ah_core.o crypto/des/des_cbc.o esp.o esp_core.o \
+	   esp_rijndael.o ip_p.o ipsec.o key.o mbuf.o crypto/md5/md5c.o \
+	   crypto/rijndael/rijndael.o set_key.o crypto/sha1/sha1.o \
+	   crypto/sha2/sha256.o crypto/sha2/sha512.o \
+	   nat_traversal.o ioctl_ipsec.o check_timer.o
+
+objs_V	:= VLan_init.o VLan_xmit.o
+
+module_E := Esp_proto.o
+module_V := virtuallan.o
+
+
+
+
+all: clean $(module_E) $(module_V)
+
+
+$(module_E): $(objs_E)
+	$(LD) -r $(LDFLAGS) $^ -o $@
+
+
+$(module_V): $(objs_V)
+	$(LD) -r $(LDFLAGS) $^ -o $@
+
+
+# crypto/sha2/*.o 追加@100723yoshino
+clean: 
+	rm -f *.o *~ ../include/*~ core crypto/des/*.o crypto/md5/*.o crypto/sha1/*.o crypto/sha2/*.o crypto/rijndael/*.o
+
+x: $(module_E) $(module_V)
+
+# crypto/sha2/sha256.c crypto/sha2/sha512.c 追加@100723yoshino
+SRCS	= linux_ipsec.c ah.c ah_core.c crypto/des/des_cbc.c esp.c esp_core.c \
+	   esp_rijndael.c ip_p.c ipsec.c key.c mbuf.c crypto/md5/md5c.c \
+	   crypto/rijndael/rijndael.c set_key.c crypto/sha1/sha1.c \
+	   crypto/sha2/sha256.c crypto/sha2/sha512.c \
+	   nat_traversal.c ioctl_ipsec.c check_timer.c \
+	   VLan_init.c VLan_xmit.c
+printdep:
+	@../../makeinc $(CFLAGS) $(SRCS)
+

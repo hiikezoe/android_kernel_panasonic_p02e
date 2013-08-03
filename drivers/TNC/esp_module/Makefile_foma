@@ -1,0 +1,40 @@
+# makefiles 
+include	boad.mk
+#CC	:= gcc 
+
+CFLAGS	:= -D__KERNEL__ -DMODULE -O2 -Wall -I$(KERNEL_BUILD)/include/ -Iinclude/ -I../common -I./crypto/sha1/ -I./crypto/md5/ -I./crypto/rijndael/ -I./crypto/des/
+
+
+
+LDFLAGS	:= 
+
+objs_E	:= linux_ipsec.o ah.o ah_core.o crypto/des/des_cbc.o esp.o esp_core.o \
+	   esp_rijndael.o ip_p.o ipsec.o key.o mbuf.o crypto/md5/md5c.o \
+	   crypto/rijndael/rijndael.o set_key.o crypto/sha1/sha1.o \
+	   nat_traversal.o ioctl_ipsec.o check_timer.o
+
+objs_V	:= VLan_init.o VLan_xmit.o
+
+module_E := Esp_proto.o
+module_V := virtuallan.o
+
+
+
+
+all: clean $(module_E) $(module_V)
+
+
+$(module_E): $(objs_E)
+	$(LD) -r $(LDFLAGS) $^ -o $@
+
+
+$(module_V): $(objs_V)
+	$(LD) -r $(LDFLAGS) $^ -o $@
+
+
+
+clean: 
+	rm -f *.o *~ ../include/*~ core crypto/des/*.o crypto/md5/*.o crypto/sha1/*.o crypto/rijndael/*.o
+
+x: $(module_E) $(module_V)
+

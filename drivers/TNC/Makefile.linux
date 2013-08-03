@@ -1,0 +1,99 @@
+#
+# TNC API lib Makefile
+#
+
+CROSS=
+CC=$(CROSS)gcc
+CPP=$(CROSS)cpp
+AS=$(CROSS)as
+LD=$(CROSS)ld
+AR=$(CROSS)ar
+RANLIB=$(CROSS)ranlib
+
+export CC CPP AS LD AR RANLIB
+
+EXTRA_CFLAGS=$(GLOBAL_CTRL) -g
+EXTRA_DEFINES=-D_LINUX_
+EXTRA_CPPFLAGS=
+EXTRA_ASFLAGS=
+
+CFLAGS = $(EXTRA_CFLAGS) -Wall
+
+CPPFLAGS = $(EXTRA_CPPFLAGS) $(EXTRA_DEFINES)
+
+#ASFLAGS = $(EXTRA_ASFLAGS) -gg -DASM
+
+VPATH=.:../include
+
+
+# yでkernel2.6用、それ以外で2.4用
+TNC_KERNEL_2_6_MAKE=yes
+
+ifeq ($(TNC_KERNEL_2_6_MAKE),yes)
+
+
+all : libtnc Esp_proto virtuallan
+
+clean :
+	rm -f *~
+	rm -f Makefile.bak
+	make -C ./wrapper clean
+	make -C ./esp_module clean
+
+depend :
+	makedepend $(CPPFLAGS) $(SRCS)	
+
+.PHONY : all
+
+libtnc :
+	make -C ./wrapper
+
+Esp_proto : 
+	make -C ./esp_module Esp_proto.ko
+
+virtuallan :
+	make -C ./esp_module virtuallan.ko
+
+else
+
+TARGET = libtnc.a Esp_proto.o virtuallan.o
+TARGET = libtnc.a
+
+HDRS = 
+
+SRCS = 
+
+OBJS = 
+
+all : $(TARGET)
+	(cd ./wrapper; make)
+#	(cd ./esp_module; make esp_proto)
+#	(cd ./esp_module; make virtual)
+	(cd ./esp_module; make Esp_proto.o)
+	(cd ./esp_module; make virtuallan.o)
+
+clean :
+	rm -f *~
+	rm -f Makefile.bak
+	(cd ./wrapper; make clean)
+	(cd ./esp_module; make clean)
+
+depend :
+	makedepend $(CPPFLAGS) $(SRCS)	
+
+.PHONY : all
+install : all
+	cp $(TARGET) $(TARGET_DIR)
+
+libtnc.a :
+	(cd ./wrapper; make)
+
+Esp_proto.o :
+	(cd ./esp_module; make esp_proto)
+
+virtuallan.o :
+	(cd ./esp_module; make virtual)
+
+endif
+
+# DO NOT DELETE THIS LINE -- make depend depends on it.

@@ -1,0 +1,7 @@
+menu "PMC MB86A35 MM Tuner"
+    config MMTUNER_DRIVER
+    tristate "PMC MB86A35 MM Tuner"
+    help
+        This enables the PMC MB86A35 MM Tuner for Laputa
+
+endmenu
